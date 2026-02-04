@@ -8,18 +8,12 @@ import (
 	"os"
 
 	"github.com/yourorg/arc-ask/internal/cmd"
-	"github.com/yourorg/arc-sdk/ai"
 )
 
 func main() {
-	aiCfg, err := ai.LoadConfig()
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "arc-ask: failed to load AI config: %v\n", err)
-		os.Exit(1)
-	}
-
-	root := cmd.NewRootCmd(aiCfg)
+	root := cmd.NewRootCmd()
 	if err := root.Execute(); err != nil {
+		fmt.Fprintf(os.Stderr, "arc-ask: %v\n", err)
 		os.Exit(1)
 	}
 }

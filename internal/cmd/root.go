@@ -67,15 +67,16 @@ func (c *BridgeClient) AskWithContext(ctx context.Context, prompt, context strin
 // AskWithTools enables specific Pi tools
 func (c *BridgeClient) AskWithTools(ctx context.Context, prompt string, tools []string) (string, error) {
 	// In full implementation, tell daemon which extensions to load
-	return c.fallbackAsk(ctx, prompt, "", tools)
+	// For fallback, tools are not supported (daemon required)
+	return c.fallbackAsk(ctx, prompt, "")
 }
 
 // fallbackAsk runs pi directly (temporary until full RPC)
 func (c *BridgeClient) fallbackAsk(ctx context.Context, prompt string, input ...string) (string, error) {
 	// Check if pi is installed
 	piPath := "pi"
-	if _, err := execLookPath(piPath); err != nil {
-		return "", fmt.Errorf("Pi not found. Install: npm install -g @mariozechner/pi-coding-agent")
+	if _, err := exec.LookPath(piPath); err != nil {
+		return "", fmt.Errorf("pi not found. Install: npm install -g @mariozechner/pi-coding-agent")
 	}
 
 	args := []string{"--mode", "json", "--print", prompt}
@@ -90,7 +91,7 @@ func (c *BridgeClient) fallbackAsk(ctx context.Context, prompt string, input ...
 
 	out, err := cmd.Output()
 	if err != nil {
-		if exitErr, ok := err.(*execExitError); ok {
+		if exitErr, ok := err.(*exec.ExitError); ok {
 			return "", fmt.Errorf("pi failed: %s", exitErr.Stderr)
 		}
 		return "", fmt.Errorf("failed to run pi: %w", err)
@@ -99,16 +100,8 @@ func (c *BridgeClient) fallbackAsk(ctx context.Context, prompt string, input ...
 	return strings.TrimSpace(string(out)), nil
 }
 
-// execLookPath and execCommand are abstractions for testing
-var execLookPath = exec.LookPath
+// execCommand is an abstraction for testing
 var execCommand = exec.Command
-
-// execExitError interface for error checking
-type execExitError interface {
-	error
-	ExitCode() int
-	Stderr []byte
-}
 
 func expandHome(path string) string {
 	if strings.HasPrefix(path, "~/") {
@@ -293,13 +286,13 @@ func mergeContext(input string, files []string) (string, error) {
 }
 
 func listTemplatesCmd(w io.Writer) error {
-	fmt.Fprintln(w, "Available templates:")
-	fmt.Fprintln(w)
-	fmt.Fprintln(w, "  @code-review     Review code changes")
-	fmt.Fprintln(w, "  @explain         Explain complex code")
-	fmt.Fprintln(w, "  @summarize       Summarize text/logs")
-	fmt.Fprintln(w, "  @security-check  Check for vulnerabilities")
-	fmt.Fprintln(w)
-	fmt.Fprintln(w, "Create templates in: ~/.config/arc/prompts/")
+	_, _ = fmt.Fprintln(w, "Available templates:")
+	_, _ = fmt.Fprintln(w)
+	_, _ = fmt.Fprintln(w, "  @code-review     Review code changes")
+	_, _ = fmt.Fprintln(w, "  @explain         Explain complex code")
+	_, _ = fmt.Fprintln(w, "  @summarize       Summarize text/logs")
+	_, _ = fmt.Fprintln(w, "  @security-check  Check for vulnerabilities")
+	_, _ = fmt.Fprintln(w)
+	_, _ = fmt.Fprintln(w, "Create templates in: ~/.config/arc/prompts/")
 	return nil
 }
